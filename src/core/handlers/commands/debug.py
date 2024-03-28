@@ -1,3 +1,5 @@
+import random
+
 from aiogram import Router, types, F
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
@@ -9,8 +11,10 @@ from src.app.product.schemas.product import Pydantic_Product_Create
 from src.app.product.states.add_product import AddProductState
 from src.core.filters.is_debug_mod import IsDebugMode
 from src.core.filters.is_admin import IsAdmin
+from src.core.keyboards.inline.pagination import Paginator
 from src.core.services.user import admin_service
-from src.core.keyboards.inline.keyboard_generator import inline_keyboards_generator as inline_keyboards
+from src.core.keyboards.inline.keyboard_generator import inline_keyboards_generator as inline_keyboards, \
+    inline_pagination
 
 router = Router()
 
@@ -111,3 +115,17 @@ async def set_stage_test(message: types.Message, state: FSMContext):
         await message.answer('not in state')
     else:
         await message.answer(f'stage test: {s}')
+
+
+@router.message(Command('inline_test'))
+async def callback_query(query: types.CallbackQuery, state: FSMContext):
+    await query.message.answer('inline test')
+
+
+@router.message(IsDebugMode(), IsAdmin(), Command('inline_pagination_test'))
+async def inline_pagination_test(message: types.Message, state: FSMContext):
+    data = {str(random.randint(1, 100)): random.randint(1, 100) for _ in range(10)}
+    await message.answer(
+        'pagination test:',
+        reply_markup=await inline_pagination(dp=router, size=3, **data)
+    )

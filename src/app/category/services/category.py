@@ -12,10 +12,8 @@ class CategoryService(BaseServices):
 
     async def add_product_to_category(self, category_id: str, product):
         category = await self.model.get_or_none(id=category_id)
-        if category:
-            await category.products.add(product)
-        else:
-            return None
+        await product.categories.add(category)
+        await product.save()
 
 
 category_service = CategoryService()

@@ -3,6 +3,8 @@ from uuid import UUID
 
 from tortoise import Model, fields, models
 
+from src.app.category.models import Category
+
 
 class Product(Model):
     id = fields.UUIDField(pk=True, default=uuid.uuid4)
@@ -17,6 +19,10 @@ class Product(Model):
     updated_at = fields.DatetimeField(auto_now=True)
     cart: fields.ManyToManyRelation["Cart"] = fields.ManyToManyField(
         "models.Cart", related_name="products_cart")
+    categories: fields.ManyToManyRelation["Category"] = fields.ManyToManyField(
+            'models.Category',
+            related_name='product_categories'
+        )
 
 
 class Cart(Model):

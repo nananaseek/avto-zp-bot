@@ -12,12 +12,13 @@ from src.app.category import answers
 sub_callback_router = Router()
 
 
-@sub_callback_router.callback_query(F.data == 'name', CreateCategory.name)
+@sub_callback_router.callback_query(F.data == 'name', CreateCategory.is_correct)
 async def rename_category(query: types.CallbackQuery, state: FSMContext):
+    await state.set_state(CreateCategory.name)
     await query.message.answer(answers.enter_category_name)
 
 
-@sub_callback_router.callback_query(F.data == 'create_category', CreateCategory.name)
+@sub_callback_router.callback_query(F.data == 'create_category', CreateCategory.is_correct)
 async def create_category(query: types.CallbackQuery, state: FSMContext):
     data = await state.get_data()
     try:

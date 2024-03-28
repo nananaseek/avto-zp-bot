@@ -3,7 +3,7 @@ from aiogram.fsm.context import FSMContext
 
 from src.app.product import answers
 from src.app.product.handlers.commands.admin import add_product
-from src.app.product.handlers.utils.product import change_product, save_product
+from src.app.product.handlers.utils.product import change_product_from_data, save_product
 from src.core.keyboards.inline.keyboard_generator import inline_keyboards_generator as inline_keyboards
 from src.app.product.states.add_product import AddProductState
 
@@ -20,7 +20,7 @@ async def yes_discount(query: types.CallbackQuery, state: FSMContext):
 @router.callback_query(F.data == 'no', AddProductState.is_discount)
 async def no_discounted(query: types.CallbackQuery, state: FSMContext):
     data = await state.update_data(discount=None, is_correct=False)
-    await change_product(data, query.message, state)
+    await change_product_from_data(data, query.message, state)
 
 
 @router.callback_query(F.data == 'category', AddProductState.save_product)

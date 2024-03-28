@@ -16,16 +16,3 @@ sub_command_router = Router()
 async def create_category(message: types.Message, state: FSMContext):
     await state.set_state(CreateCategory.name)
     await message.answer(answers.enter_category_name)
-
-
-@sub_command_router.message(IsAdmin(), CreateCategory.name)
-async def add_name(message: types.Message, state: FSMContext):
-    data = await state.update_data(name=message.text)
-
-    await message.answer(
-        answers.edit_category,
-        reply_markup=await inline_keyboards(
-            **data,
-            create_category=answers.create_category
-        )
-    )
