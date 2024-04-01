@@ -19,8 +19,9 @@ router = Router()
 async def add_product(message: types.Message, state: FSMContext):
     current_state = await state.get_state()
     if current_state != 'AddProductState:save_product':
+        await state.clear()
         data = await state.update_data(is_correct=True)
-        category_dict = await category_utils.get_category_and_inline(answers.category_selected, message)
+        category_dict = await category_utils.get_category_and_inline(answers.enter_category_name, message)
         await state.update_data(category_dict=category_dict)
 
     await state.set_state(AddProductState.is_category)

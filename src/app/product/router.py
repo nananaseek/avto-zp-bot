@@ -1,16 +1,15 @@
 from aiogram import Router
 
-from src.app.product.handlers.callback_query.admin import router as callback_admin_router
-from src.app.product.handlers.callback_query.user import router as callback_user_router
-from src.app.product.handlers.commands.admin import router as command_admin_router
-from src.app.product.handlers.message.admin import router as message_admin_router
-from src.app.product.handlers.message.user import router as message_user_router
-router = Router()
+from .handlers.add_product.router import add_product_router
+from .handlers.get_product.router import get_product_router
+from .handlers.change_product.router import change_product_router
+from .handlers.delete_product.router import delete_product_router
 
-router.include_routers(
-    callback_admin_router,
-    callback_user_router,
-    command_admin_router,
-    message_admin_router,
-    message_user_router
+product_router = Router()
+
+product_router.include_routers(
+    add_product_router,
+    get_product_router,
+    change_product_router,
+    delete_product_router
 )

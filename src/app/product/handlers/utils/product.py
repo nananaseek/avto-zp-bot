@@ -3,6 +3,7 @@ import logging
 from aiogram import types
 from aiogram.fsm.context import FSMContext
 from aiogram.enums import ParseMode
+from aiogram.types import InputMediaPhoto
 from pydantic import ValidationError
 
 from src.app.category.services.category import category_service
@@ -10,8 +11,10 @@ from src.app.product import answers
 from src.app.product.schemas.product import Pydantic_Product_Create
 from src.app.product.services.product import product_service
 from src.app.product.states.add_product import AddProductState
+from src.app.product.states.change_product import ChangeProductStates
 from src.core.filters.is_admin import IsAdmin
 from src.core.keyboards.inline.keyboard_generator import inline_keyboards_generator as inline_keyboards
+from src.core.utils.edit_media import edit_photo
 
 
 async def save_product(data: dict, message: types.Message, state: FSMContext):
@@ -37,9 +40,10 @@ async def save_product(data: dict, message: types.Message, state: FSMContext):
 
 async def change_product_from_data(data: dict, message: types.Message, state: FSMContext):
     await state.set_state(AddProductState.save_product)
+    logging.info(str(data))
     data.pop('is_correct')
+    photo = data.pop('image')
     c_dict = data.pop('category_dict')
-    photo = data['image']
     data['category'] = 'Категорія: ' + c_dict[f'{data["category"]}']
     data['name'] = f'Назва: {data["name"]}'
     data['description'] = f'Опис: {data["description"]}'
@@ -60,10 +64,55 @@ async def change_product_from_data(data: dict, message: types.Message, state: FS
     )
 
 
-# async def change_product_from_queryset()
+async def change_product_from_queryset(message: types.Message, state: FSMContext):
+    await state.set_state(ChangeProductStates.change_product)
+    data = await state.get_data()
+    product = await product_service.get(obj=True, id=data['product_id'])
+    product_category = await product.categories.all().first()
+    await state.update_data(product=product, category=product_category)
+    product, category = (await product_service.obj_to_schema(product),
+                         await category_service.obj_to_schema(product_category))
+    product_schema, category_schemas = product.model_dump(), category.model_dump()
+
+    is_discount = 'Знижки на товар не має' if product_schema['discount'] is None else f'Знижка: {product_schema['discount']}%'
+
+    callback_data_kb = {
+        f'name': f'Назва: {product_schema['name']}',
+        f'description': f'Опис: {product_schema['description']}',
+        f'image': 'Змінити картинку?',
+        f'price': f'Ціна: {product_schema['price']}',
+        f'quantity': f'Кількість: {product_schema['quantity']}',
+        f'discount': is_discount,
+        f'close': 'Завершити редагування.'}
+
+    kb = await inline_keyboards(
+        # category=f'Категорія: {category_schemas['name']}',
+        **callback_data_kb
+    )
+    await message.edit_media(
+        media=InputMediaPhoto(
+            media=product_schema['image'],
+            caption='Виберіть що хочете змінити',
+        ),
+        reply_markup=kb
+
+        # image=product_schema['image'],
+        # text='Виберіть що хочете змінити',
+        # keyboard=kb,
+        # chat_id=message.chat.id,
+        # message_id=int(data['message_id'])
+    )
+
+    # else:
+    #     await message.answer_photo(
+    #         product_schema['image'],
+    #         caption=f'Виберіть що хочете змінити',
+    #         reply_markup=kb
+    #     )
+    #     await state.update_data(in_change=True)
 
 
-async def send_product_list(product_list, message: types.Message):
+async def send_product_list(product_list, message: types.Message, edit=None):
     is_admin = IsAdmin()
     for product in product_list:
         if product.discount is None:
@@ -72,19 +121,35 @@ async def send_product_list(product_list, message: types.Message):
             new_price = product.price - (product.price * product.discount / 100)
             is_discount = f'<s>{product.price}₴</s> {new_price:.2f}₴'
 
-        id_product = {
-            f'change_product_{product.id}': 'Редагувати продукт',
-            f'delete_product_{product.id}': 'Видалити продукт'
-        }
+        if await is_admin(message):
+            id_product = {
+                f'change_{product.id}': 'Редагувати продукт',
+                f'delete_{product.id}': 'Видалити продукт'
+            }
 
-        await message.answer_photo(
-            product.image,
-            caption=f'Назва продукту: {product.name} \n'
-                    f'Опис продукту: {product.description}\n'
-                    f'Ціна: {is_discount}\n'
-                    f'Кількість на складі: {product.quantity}шт',
-            parse_mode=ParseMode.HTML,
-            reply_markup=await inline_keyboards(
-                **id_product
-            ) if await is_admin(message) else None
-        )
+        if edit is None:
+            await message.answer_photo(
+                product.image,
+                caption=f'Назва продукту: {product.name} \n'
+                        f'Опис продукту: {product.description}\n'
+                        f'Ціна: {is_discount}\n'
+                        f'Кількість на складі: {product.quantity}шт',
+                parse_mode=ParseMode.HTML,
+                reply_markup=await inline_keyboards(
+                    **id_product
+                ) if await is_admin(message) else None
+            )
+        else:
+            await message.edit_media(
+                InputMediaPhoto(
+                    media=product.image,
+                    caption=f'Назва продукту: {product.name} \n'
+                            f'Опис продукту: {product.description}\n'
+                            f'Ціна: {is_discount}\n'
+                            f'Кількість на складі: {product.quantity}шт',
+                    parse_mode=ParseMode.HTML,
+                ),
+                reply_markup=await inline_keyboards(
+                    **id_product
+                ) if await is_admin(message) else None
+            )

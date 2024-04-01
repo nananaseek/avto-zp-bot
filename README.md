@@ -3,6 +3,7 @@
 ```bash
 pip install -r requirements.txt
 ```
+
 # Запуск бота
 бот можно запустити через команду в терміналі
 ```bash

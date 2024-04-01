@@ -1,3 +1,4 @@
+import logging
 from typing import TypeVar
 
 from pydantic import BaseModel
@@ -17,14 +18,17 @@ class BaseServices:
     async def create(self, schema: create_schema, **kwargs) -> ModelType:
         return await self.model.create(**schema.model_dump(exclude_unset=True), **kwargs)
 
-    async def get(self, **kwargs) -> ModelType:
-        return await self.model.get_or_none(Q(
+    async def get(self, obj: bool = False, **kwargs) -> ModelType | GetSchemaType:
+        object_from_db = await self.model.get_or_none(Q(
             **kwargs,
             join_type='OR'
         ))
+        return object_from_db if obj else await self.get_schema.from_tortoise_orm(object_from_db)
 
-    async def delete(self, **kwargs) -> None:
-        return await self.model.delete(**kwargs)
+    async def delete(self, **kwargs):
+        obj = await self.model.filter(**kwargs).delete()
+        if not obj:
+            logging.error('Object not found')
 
     async def all(self) -> list[ModelType]:
         all_objects = self.model.all()
@@ -36,3 +40,8 @@ class BaseServices:
             join_type='OR'
         ))
         return objects if obj else await self.get_schema.from_queryset(objects)
+
+    async def obj_to_schema(self, obj: ModelType = None, objects: list = None) -> GetSchemaType:
+        return await self.get_schema.from_tortoise_orm(
+            obj
+        ) if objects is None else await self.get_schema.from_queryset(objects)

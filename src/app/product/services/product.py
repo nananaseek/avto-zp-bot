@@ -8,5 +8,9 @@ class ProductService(BaseServices):
     create_schema = Pydantic_Product_Create
     get_schema = Pydantic_Product_Get
 
+    async def get_category(self):
+        product = await self.model.get(name='fdsa')
+        return await product.categories.all()
+
 
 product_service = ProductService()

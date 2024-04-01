@@ -1,8 +1,15 @@
 import os
 import logging
 
+from aiogram import Dispatcher, Bot
+from aiogram.enums import ParseMode
+
 from src.settings.config import settings
 from src.settings.log import DEFAULT_LOGGING
+
+
+dp = Dispatcher()
+bot = Bot(settings.TOKEN, parse_mode=ParseMode.HTML)
 
 
 async def init_log_folder():

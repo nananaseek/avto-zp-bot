@@ -22,8 +22,6 @@ async def admin_panel(message: types.Message, state: FSMContext):
             row=2,
             add_product='Додати товар',
             add_category='Додати категорію',
-            remove_product='Видалити товар',
-            remove_category='Видалити категорію',
             zero_quantity='Вивести товар якого не має на складі',
         )
     )
