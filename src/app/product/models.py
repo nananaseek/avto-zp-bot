@@ -24,6 +24,17 @@ class Product(Model):
             related_name='product_categories'
         )
 
+    def discount_price(self):
+        if self.discount is None:
+            new_price = self.price - (self.price * self.discount / 100)
+            return f'<s>{self.price}₴</s> {new_price:.2f}₴'
+        else:
+            return f'{self.price}'
+
+    class PydanticMeta:
+        computed = ["discount_price",]
+        allow_cycles = True
+
 
 class Cart(Model):
     id = fields.UUIDField(pk=True, default=uuid.uuid4)
