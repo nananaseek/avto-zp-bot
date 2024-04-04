@@ -91,7 +91,6 @@ async def save_category(query: types.CallbackQuery, state: FSMContext):
 @router.callback_query(AddProductState.is_category)
 async def is_category(query: types.CallbackQuery, state: FSMContext):
     data = await state.update_data(category=query.data)
-    await query.message.answer('gfasfdsafdsa')
     if data['is_correct']:
         await query.message.answer(
             f"{answers.category_is_selected}: {data['category_dict'][f'{query.data}']}",
