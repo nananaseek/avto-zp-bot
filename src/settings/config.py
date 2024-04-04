@@ -7,6 +7,8 @@ load_dotenv()
 
 class Settings:
     TOKEN: str = os.environ.get('TOKEN')
+    SESSION_EXPIRE_MINUTES: int = 60 * 30
+    ADMIN_SESSION_EXPIRE_MINUTES: int = 60 * 60 * 24
 
     DEBUG: bool = bool(os.environ.get('DEBUG'))
 
