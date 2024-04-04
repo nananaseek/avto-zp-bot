@@ -14,6 +14,7 @@ from src.app.product.states.change_product import ChangeProductStates
 from src.core.filters.is_admin import IsAdmin
 from src.core.keyboards.inline.keyboard_generator import inline_keyboards_generator as inline_keyboards
 from src.app.product.states.add_product import AddProductState
+from src.core.utils.dell_message import dell_target_message
 
 router = Router()
 
@@ -22,37 +23,15 @@ router = Router()
 async def command_change_product(query: types.CallbackQuery, state: FSMContext):
     await state.clear()
     product_id = query.data.split('_')[1]
-    await state.set_state(AdminPanel.chose_product)
-    await state.update_data(product_id=product_id, message_id=query.message.message_id)
-    # await query.message.answer(
-    #     'Ви точно хочете змінити товар?',
-    #     reply_markup=await inline_keyboards(
-    #         yes='Так',
-    #         no='Ні'
-    #     )
-    # )
+    await state.update_data(product_id=product_id)
     await state.set_state(ChangeProductStates.change_product)
-    await state.update_data(message_id=query.message.message_id)
-    await change_product_from_queryset(query.message, state)
-
-
-@router.callback_query(IsAdmin(), AdminPanel.chose_product, F.data == 'no')
-async def command_no_change_product(query: types.CallbackQuery, state: FSMContext):
-    await query.message.delete()
-    await state.clear()
-
-
-@router.callback_query(IsAdmin(), AdminPanel.chose_product, F.data == 'yes')
-async def command_yes_change_product(query: types.CallbackQuery, state: FSMContext):
-    await query.message.delete()
-    await state.set_state(ChangeProductStates.change_product)
-    await state.update_data(message_id=query.message.message_id)
+    await dell_target_message(query.message.chat.id, query.message.message_id)
     await change_product_from_queryset(query.message, state)
 
 
 @router.callback_query(IsAdmin(), ChangeProductStates.change_product, F.data == 'name')
 async def change_product_name(query: types.CallbackQuery, state: FSMContext):
-    await query.message.answer(f'Введіть назву: ')
+    await query.message.answer(f'Введіть назву: {query.message.message_id}')
     await state.set_state(ChangeProductStates.name)
 
 
