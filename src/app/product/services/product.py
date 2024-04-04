@@ -1,5 +1,5 @@
 from src.app.product.schemas.product import Pydantic_Product_Create, Pydantic_Product_Get
-from src.core.base_servises import BaseServices
+from src.core.services.base_servises import BaseServices
 from src.app.product.models import Product
 
 

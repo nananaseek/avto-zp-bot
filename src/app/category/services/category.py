@@ -1,7 +1,5 @@
-import logging
-
 from src.app.category.schemas.category import Pydantic_Category_Create, Pydantic_Category_Get
-from src.core.base_servises import BaseServices
+from src.core.services.base_servises import BaseServices
 from src.app.category.models import Category
 
 
