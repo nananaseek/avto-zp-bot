@@ -88,6 +88,8 @@ class Paginator:
         paginations = self._get_paginator(
             counts=len(self._list_kb),
             page=current_page,
+            list_obj=_list_current_page,
+            size=self._size,
             page_separator=self.page_separator,
             startswith=self._startswith
         )
@@ -123,6 +125,8 @@ class Paginator:
     def _get_paginator(
             counts: int,
             page: int,
+            size: int,
+            list_obj: tuple,
             page_separator: str = '/',
             startswith: str = 'page_'
     ) -> list[types.InlineKeyboardButton]:
@@ -149,12 +153,13 @@ class Paginator:
                     callback_data=f'{startswith}{page - 1}'
                 ),
             )
-        paginations.append(
-            types.InlineKeyboardButton(
-                text=f'{page + 1}{page_separator}{counts + 1}',
-                callback_data='pass'
-            ),
-        )
+        if size < len(list_obj):
+            paginations.append(
+                types.InlineKeyboardButton(
+                    text=f'{page + 1}{page_separator}{counts + 1}',
+                    callback_data='pass'
+                ),
+            )
         if counts > page:
             paginations.append(
                 types.InlineKeyboardButton(
