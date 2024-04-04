@@ -1,4 +1,4 @@
-from src.core.base_servises import BaseServices
+from src.core.services.base_servises import BaseServices
 from src.app.product.models import Admins
 
 
