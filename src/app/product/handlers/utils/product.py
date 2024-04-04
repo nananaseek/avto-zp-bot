@@ -89,27 +89,23 @@ async def change_product_from_queryset(message: types.Message, state: FSMContext
         # category=f'Категорія: {category_schemas['name']}',
         **callback_data_kb
     )
-    await message.edit_media(
-        media=InputMediaPhoto(
-            media=product_schema['image'],
-            caption='Виберіть що хочете змінити',
-        ),
-        reply_markup=kb
+    if 'in_change' in data:
+        await edit_photo(
+            image=product_schema['image'],
+            text=f'Виберіть що хочете змінити \nsave {data['message_id']}\n {message.message_id}',
+            keyboard=kb,
+            chat_id=message.chat.id,
+            message_id=message.message_id - data['counter']
+        )
+        await state.update_data(counter=data['counter'] + 2)
 
-        # image=product_schema['image'],
-        # text='Виберіть що хочете змінити',
-        # keyboard=kb,
-        # chat_id=message.chat.id,
-        # message_id=int(data['message_id'])
-    )
-
-    # else:
-    #     await message.answer_photo(
-    #         product_schema['image'],
-    #         caption=f'Виберіть що хочете змінити',
-    #         reply_markup=kb
-    #     )
-    #     await state.update_data(in_change=True)
+    else:
+        await message.answer_photo(
+            product_schema['image'],
+            caption=f'Виберіть що хочете змінити\n {message.message_id}',
+            reply_markup=kb
+        )
+        await state.update_data(in_change=True, message_id=message.message_id, counter=2)
 
 
 async def send_product_list(product_list, message: types.Message, edit=None):
@@ -126,6 +122,10 @@ async def send_product_list(product_list, message: types.Message, edit=None):
                 f'change_{product.id}': 'Редагувати продукт',
                 f'delete_{product.id}': 'Видалити продукт'
             }
+        else:
+            id_product = {
+                f'to-cart_{product.id}': 'До корзини'
+            }
 
         if edit is None:
             await message.answer_photo(
@@ -137,7 +137,7 @@ async def send_product_list(product_list, message: types.Message, edit=None):
                 parse_mode=ParseMode.HTML,
                 reply_markup=await inline_keyboards(
                     **id_product
-                ) if await is_admin(message) else None
+                )
             )
         else:
             await message.edit_media(
@@ -153,3 +153,31 @@ async def send_product_list(product_list, message: types.Message, edit=None):
                     **id_product
                 ) if await is_admin(message) else None
             )
+
+
+async def change_cart_product(product: dict, message: types.Message, edit: bool = False):
+    id_product = {
+        f'add-to-cart_{product['id']}': 'Додати продукт',
+        f'minus-to-cart_{product['id']}': 'Мінус продукт',
+        f'close-cart_{product['id']}': 'Закрити редагування продукту'
+    }
+    text = (f'Назва продукту: {product['name']} \n'
+            f'Опис продукту: {product['description']}\n'
+            f'Ціна: {product['description']}\n'
+            f'Кількість на складі: {product['quantity']}шт\n'
+            f'Вибрано продукту: {product['takes_by_user']}')
+
+    if edit:
+        await message.edit_media(
+            InputMediaPhoto(
+                media=product['image'],
+                caption=text
+            ),
+            reply_markup=await inline_keyboards(row=2, **id_product)
+        )
+    else:
+        await message.answer_photo(
+            product['image'],
+            caption=text,
+            reply_markup=await inline_keyboards(row=2, **id_product)
+        )

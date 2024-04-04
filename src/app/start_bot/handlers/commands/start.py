@@ -25,7 +25,7 @@ async def start_bot(message: types.Message, state: FSMContext):
         ) if await admin(message) else await keyboards_generator(
             'Виберіть дію',
             2,
-            'Наявні товари', 'Товар за категоріями'
+            'Наявні товари', 'Товар за категоріями', 'Корзина'
         )
     )
 
