@@ -1,19 +1,11 @@
-import logging
-
 from aiogram import Router, types, F
 from aiogram.fsm.context import FSMContext
 
 from src.app.admin_panel.states.admin_panel import AdminPanel
-from src.app.category.services.category import category_service
-from src.app.category.utils import category_utils
-from src.app.product import answers
-from src.app.product.handlers.utils.product import change_product_from_data, save_product, change_product_from_queryset
 from src.app.product.services.product import product_service
-from src.app.product.states.change_product import ChangeProductStates
 from src.core.filters.is_admin import IsAdmin
 from src.core.keyboards.inline.keyboard_generator import inline_keyboards_generator as inline_keyboards
-from src.app.product.states.add_product import AddProductState
-
+from src.core.utils.dell_message import dell_two_message
 
 router = Router()
 
@@ -40,7 +32,7 @@ async def command_no_change_product(query: types.CallbackQuery, state: FSMContex
 
 @router.callback_query(IsAdmin(), AdminPanel.remove_product, F.data == 'yes')
 async def command_yes_change_product(query: types.CallbackQuery, state: FSMContext):
-    await query.message.delete()
+    await dell_two_message(query.message.chat.id, query.message.message_id)
     data = await state.get_data()
     await product_service.delete(id=data['product_id'])
     await query.answer('Товар видалено!')

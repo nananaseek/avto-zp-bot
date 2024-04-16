@@ -1,8 +1,5 @@
-from typing import List, Dict
-
 from aiogram.types import Message
 
-from src.app.category.models import Category
 from src.app.category.services.category import category_service
 from src.core.keyboards.inline.keyboard_generator import inline_pagination
 from src.core.keyboards.inline.keyboard_generator import inline_keyboards_generator as inline_keyboards

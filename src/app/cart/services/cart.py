@@ -1,15 +1,11 @@
-import logging
 from typing import Dict, List, Optional
-
-from pydantic import BaseModel
-from redis.commands.json.path import Path
 
 from src.core.database.redis.connect import cart
 
 
 class CartService:
     _CART_SESSION = cart
-    _EXPIRED_TIME = 60 * 30
+    _EXPIRED_TIME = 60 * 60
 
     async def save_cart(self, **kwargs) -> bool:
         # check if cart already exists
@@ -86,33 +82,55 @@ class CartService:
             product = None
         return product
 
-    async def add_product_to_cart(self, user_id: int, uuid: str) -> bool:
+    async def add_product_to_cart(self, user_id: int, uuid: str, amount: int = 1) -> Optional[bool]:
         data = await self.get_product_from_cart(user_id=user_id, uuid=uuid)
-        if int(data['takes_by_user']) >= int(data['quantity']):
-            return False
+        if data is None:
+            return None
         else:
-            await self._CART_SESSION.hincrby(
-                f'carts:{data['user_id']}:{data['id']}',
-                'takes_by_user'
-            )
-            return True
+            if amount + int(data['takes_by_user']) > int(data['quantity']):
+                return False
+            else:
+                await self._CART_SESSION.hincrby(
+                    f'carts:{data['user_id']}:{data['id']}',
+                    'takes_by_user',
+                    amount=amount
+                )
+                return True
 
-    async def delete_product_cart(self, user_id: int, uuid: str) -> bool:
-        # if return 1 is true and return 0 is false it's mean data doesn't exists
+    async def add_choose_amount(self, user_id: int, uuid: str, amount: int) -> Optional[bool]:
         data = await self.get_product_from_cart(user_id=user_id, uuid=uuid)
-        if int(data['takes_by_user']) <= 0:
-            await self._CART_SESSION.delete(f"carts:{data['user_id']}:{data['id']}")
-            return True
+        if data is None:
+            return None
         else:
-            await self._CART_SESSION.hincrby(
-                f'carts:{data['user_id']}:{data['id']}',
-                'takes_by_user',
-                amount=-1
-            )
-            return False
+            takes_by_user = int(data['takes_by_user'])
+            quantity = int(data['quantity'])
+            if takes_by_user >= quantity and amount + takes_by_user > data['quantity']:
+                return False
+            else:
+                await self._CART_SESSION.hincrby(
+                    f'carts:{data['user_id']}:{data['id']}',
+                    'takes_by_user'
+                )
+                return True
+
+    async def delete_product_cart(self, user_id: int, uuid: str) -> Optional[bool]:
+        data = await self.get_product_from_cart(user_id=user_id, uuid=uuid)
+        if data is None:
+            return None
+        else:
+            if int(data['takes_by_user']) <= 1:
+                await self._CART_SESSION.delete(f"carts:{data['user_id']}:{data['id']}")
+                return True
+            else:
+                await self._CART_SESSION.hincrby(
+                    f'carts:{data['user_id']}:{data['id']}',
+                    'takes_by_user',
+                    amount=-1
+                )
+                return False
 
     async def delete_all_carts(self, user_id: int) -> None:
-        [await self._CART_SESSION.delete(x) for x in await self._CART_SESSION.scan_iter(f"carts:{user_id}:*")]
+        [await self._CART_SESSION.delete(x) async for x in self._CART_SESSION.scan_iter(f"carts:{user_id}:*")]
 
 
 cart_service = CartService()

@@ -1,14 +1,10 @@
-from aiogram import Router, types, F
+from aiogram import Router, types
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 
-from src.app.category.services.category import category_service
 from src.app.category.utils import category_utils
-from src.core.keyboards.inline.keyboard_generator import inline_keyboards_generator as inline_keyboards
-from src.core.keyboards.inline.keyboard_generator import inline_pagination
 from src.core.filters.is_admin import IsAdmin
 from src.app.product.states.add_product import AddProductState
-from src.app.product.handlers.utils.product import change_product_from_data
 from src.app.product import answers
 
 router = Router()

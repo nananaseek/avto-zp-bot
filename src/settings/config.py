@@ -7,6 +7,7 @@ load_dotenv()
 
 class Settings:
     TOKEN: str = os.environ.get('TOKEN')
+    PAYMENT_TOKEN: str = os.environ.get('PAYMENT_TOKEN')
     SESSION_EXPIRE_MINUTES: int = 60 * 30
     ADMIN_SESSION_EXPIRE_MINUTES: int = 60 * 60 * 24
 

@@ -6,7 +6,7 @@ from typing import Iterable, Any, Iterator, Callable, Coroutine, Tuple, Dict, Un
 from aiogram import types, Dispatcher, Router, F
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State
-from aiogram.types import CallbackQuery
+from aiogram.types import CallbackQuery, InputMediaPhoto
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 

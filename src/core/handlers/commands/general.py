@@ -1,7 +1,7 @@
 import logging
 
-from aiogram import Router, types, F
-from aiogram.filters import CommandStart, Filter, Command
+from aiogram import Router, F
+from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, ReplyKeyboardRemove
 

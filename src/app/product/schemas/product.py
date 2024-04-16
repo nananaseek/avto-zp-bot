@@ -9,7 +9,6 @@ Pydantic_Product_Create = pydantic_model_creator(
     name="create_product",
     exclude=(
         'id',
-        'cart',
         'created_at',
         'updated_at'
     )

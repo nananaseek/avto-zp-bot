@@ -11,3 +11,7 @@ class AdminPanel(StatesGroup):
     change_product = State()
     change_category = State()
     zero_quantity = State()
+
+
+class OrderSend(StatesGroup):
+    user_message = State()

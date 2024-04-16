@@ -1,8 +1,6 @@
 from aiogram import Router, types, F
-from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 
-from src.app.category.services.category import category_service
 from src.core.keyboards.inline.keyboard_generator import inline_keyboards_generator as inline_keyboards
 from src.core.filters.is_admin import IsAdmin
 from src.app.product.states.add_product import AddProductState

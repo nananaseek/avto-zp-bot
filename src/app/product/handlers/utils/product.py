@@ -6,6 +6,7 @@ from aiogram.enums import ParseMode
 from aiogram.types import InputMediaPhoto
 from pydantic import ValidationError
 
+from src.app.cart.services.cart import cart_service
 from src.app.category.services.category import category_service
 from src.app.product import answers
 from src.app.product.schemas.product import Pydantic_Product_Create
@@ -108,7 +109,13 @@ async def change_product_from_queryset(message: types.Message, state: FSMContext
         await state.update_data(in_change=True, message_id=message.message_id, counter=2)
 
 
-async def send_product_list(product_list, message: types.Message, edit=None):
+async def send_product_list(
+        product_list,
+        message: types.Message,
+        query: types.CallbackQuery = None,
+        edit=None,
+        carousel=True
+):
     is_admin = IsAdmin()
     for product in product_list:
         if product.discount is None:
@@ -117,15 +124,26 @@ async def send_product_list(product_list, message: types.Message, edit=None):
             new_price = product.price - (product.price * product.discount / 100)
             is_discount = f'<s>{product.price}₴</s> {new_price:.2f}₴'
 
-        if await is_admin(message):
+        if await is_admin(message if query is None else query.message):
             id_product = {
                 f'change_{product.id}': 'Редагувати продукт',
                 f'delete_{product.id}': 'Видалити продукт'
             }
         else:
-            id_product = {
-                f'to-cart_{product.id}': 'До корзини'
-            }
+            is_product = await cart_service.get_product_from_cart(
+                message.from_user.id if query is None else query.from_user.id,
+                product.id
+            )
+            if is_product is None:
+                id_product = {
+                    f'to-cart_{product.id}': 'До корзини'
+                }
+            else:
+                id_product = {
+                    f'increase_{product.id}': '+1',
+                    f'choose-amount_{product.id}': f'✏️ {is_product['takes_by_user']}шт.',
+                    f'decrease_{product.id}': '-1',
+                }
 
         if edit is None:
             await message.answer_photo(
@@ -136,6 +154,7 @@ async def send_product_list(product_list, message: types.Message, edit=None):
                         f'Кількість на складі: {product.quantity}шт',
                 parse_mode=ParseMode.HTML,
                 reply_markup=await inline_keyboards(
+                    row=3,
                     **id_product
                 )
             )
@@ -150,6 +169,7 @@ async def send_product_list(product_list, message: types.Message, edit=None):
                     parse_mode=ParseMode.HTML,
                 ),
                 reply_markup=await inline_keyboards(
+                    row=3,
                     **id_product
                 ) if await is_admin(message) else None
             )
@@ -157,15 +177,19 @@ async def send_product_list(product_list, message: types.Message, edit=None):
 
 async def change_cart_product(product: dict, message: types.Message, edit: bool = False):
     id_product = {
-        f'add-to-cart_{product['id']}': 'Додати продукт',
-        f'minus-to-cart_{product['id']}': 'Мінус продукт',
-        f'close-cart_{product['id']}': 'Закрити редагування продукту'
+        f'increase_{product['id']}': '+1',
+        f'choose-amount_{product['id']}': f'✏️ {product['takes_by_user']}шт.',
+        f'decrease_{product['id']}': '-1',
     }
+    if product['discount'] == '0':
+        is_discount = product['price']
+    else:
+        is_discount = f'<s>{float(product['price']):.2f}₴</s> {float(product['new_price']):.2f}'
+
     text = (f'Назва продукту: {product['name']} \n'
             f'Опис продукту: {product['description']}\n'
-            f'Ціна: {product['description']}\n'
-            f'Кількість на складі: {product['quantity']}шт\n'
-            f'Вибрано продукту: {product['takes_by_user']}')
+            f'Ціна: {is_discount}₴\n'
+            f'Кількість на складі: {product['quantity']}шт\n')
 
     if edit:
         await message.edit_media(
@@ -173,11 +197,11 @@ async def change_cart_product(product: dict, message: types.Message, edit: bool 
                 media=product['image'],
                 caption=text
             ),
-            reply_markup=await inline_keyboards(row=2, **id_product)
+            reply_markup=await inline_keyboards(row=3, **id_product)
         )
     else:
         await message.answer_photo(
             product['image'],
             caption=text,
-            reply_markup=await inline_keyboards(row=2, **id_product)
+            reply_markup=await inline_keyboards(row=3, **id_product)
         )

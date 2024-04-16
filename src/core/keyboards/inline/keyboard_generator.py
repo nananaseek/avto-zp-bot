@@ -6,10 +6,10 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 from src.core.keyboards.inline.pagination import Paginator
 
 
-async def inline_keyboards_generator(row: int = 1, **kvargs) -> InlineKeyboardMarkup:
+async def inline_keyboards_generator(row: int = 1, **kwargs) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
 
-    for key, value in kvargs.items():
+    for key, value in kwargs.items():
         builder.add(InlineKeyboardButton(
             text=f"{value}",
             callback_data=f"{key}"),

@@ -17,8 +17,6 @@ class Product(Model):
     discount = fields.DecimalField(max_digits=100, decimal_places=1, null=True)
     created_at = fields.DatetimeField(auto_now_add=True)
     updated_at = fields.DatetimeField(auto_now=True)
-    cart: fields.ManyToManyRelation["Cart"] = fields.ManyToManyField(
-        "models.Cart", related_name="products_cart")
     categories: fields.ManyToManyRelation["Category"] = fields.ManyToManyField(
             'models.Category',
             related_name='product_categories'
@@ -34,23 +32,6 @@ class Product(Model):
     class PydanticMeta:
         computed = ["discount_price",]
         allow_cycles = True
-
-
-class Cart(Model):
-    id = fields.UUIDField(pk=True, default=uuid.uuid4)
-    quantity = fields.IntField()
-    created_at = fields.DatetimeField(auto_now_add=True)
-    updated_at = fields.DatetimeField(auto_now=True)
-
-
-class Buyer(Model):
-    id = fields.UUIDField(pk=True, default=uuid.uuid4)
-    user = fields.BigIntField()
-    cart: fields.OneToOneRelation[Cart] = fields.OneToOneField(
-        'models.Cart',
-        related_name='buyer_cart',
-        on_delete=fields.OnDelete.CASCADE
-    )
 
 
 class Admins(Model):
